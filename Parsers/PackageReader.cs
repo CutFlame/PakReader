@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using PakReader.Parsers.Class;
 using PakReader.Parsers.Objects;
 
 namespace PakReader.Parsers
@@ -14,7 +15,8 @@ namespace PakReader.Parsers
         public FObjectImport[] ImportMap { get; }
         public FObjectExport[] ExportMap { get; }
 
-        public UObject[] Exports { get; }
+        public IUExport[] DataExports { get; }
+        public FName[] DataExportTypes { get; }
 
         public PackageReader(string path) : this(path + ".uasset", path + ".uexp", path + ".ubulk") { }
         public PackageReader(string uasset, string uexp, string ubulk) : this(File.OpenRead(uasset), File.OpenRead(uexp), File.Exists(ubulk) ? File.OpenRead(ubulk) : null) { }
@@ -28,37 +30,43 @@ namespace PakReader.Parsers
             NameMap = SerializeNameMap();
             ImportMap = SerializeImportMap();
             ExportMap = SerializeExportMap();
-            Exports = new UObject[ExportMap.Length];
+            DataExports = new IUExport[ExportMap.Length];
+            DataExportTypes = new FName[ExportMap.Length];
             Loader = uexp;
             for(int i = 0; i < ExportMap.Length; i++)
             {
-                var Export = ExportMap[i];
-                // Serialize everything, not just specifically assets
-                // if (Export.bIsAsset)
+                FObjectExport Export = ExportMap[i];
                 {
-                    // We need to get the class name from the import/export maps
-                    FName ObjectClassName;
+                    FName ExportType;
                     if (Export.ClassIndex.IsNull)
-                        ObjectClassName = ReadFName(); // check if this is true, I don't know if Fortnite ever uses this
+                        ExportType = DataExportTypes[i] = ReadFName(); // check if this is true, I don't know if Fortnite ever uses this
                     else if (Export.ClassIndex.IsExport)
-                        ObjectClassName = ExportMap[Export.ClassIndex.AsExport].ObjectName;
+                        ExportType = DataExportTypes[i] = ExportMap[Export.ClassIndex.AsExport].SuperIndex.Resource.ObjectName;
                     else if (Export.ClassIndex.IsImport)
-                        ObjectClassName = ImportMap[Export.ClassIndex.AsImport].ObjectName;
+                        ExportType = DataExportTypes[i] = ImportMap[Export.ClassIndex.AsImport].ObjectName;
                     else
                         throw new FileLoadException("Can't get class name"); // Shouldn't reach this unless the laws of math have bent to MagmaReef's will
 
+                    if (ExportType.String.Equals("BlueprintGeneratedClass")) continue;
 
                     var pos = Position = Export.SerialOffset - PackageFileSummary.TotalHeaderSize;
-                    Exports[i] = ObjectClassName.String switch
+                    DataExports[i] = ExportType.String switch
                     {
-                        "Texture2D" => new Texture2D(this, ubulk, (int)(ExportMap.Sum(e => e.SerialSize) + PackageFileSummary.TotalHeaderSize)),
+                        "Texture2D" => new UTexture2D(this, ubulk, ExportMap.Sum(e => e.SerialSize) + PackageFileSummary.TotalHeaderSize),
+                        "CurveTable" => new UCurveTable(this),
+                        "DataTable" => new UDataTable(this),
+                        "FontFace" => new UFontFace(this, ubulk),
+                        "SoundWave" => new USoundWave(this, ubulk, ExportMap.Sum(e => e.SerialSize) + PackageFileSummary.TotalHeaderSize),
+                        "StringTable" => new UStringTable(this),
                         _ => new UObject(this),
                     };
+
+#if DEBUG
                     if (pos + Export.SerialSize != Position)
                     {
-                        Console.WriteLine($"Didn't read {Export.ObjectName} ({ObjectClassName}) correctly (at {Position}, should be {pos + Export.SerialSize}, {pos + Export.SerialSize - Position} behind)");
+                        System.Diagnostics.Debug.WriteLine($"[ExportType={ExportType.String}] Didn't read {Export.ObjectName} correctly (at {Position}, should be {pos + Export.SerialSize}, {pos + Export.SerialSize - Position} behind)");
                     }
-                    Exports[i].ExportInfo = Export;
+#endif
                 }
             }
             return;
@@ -124,7 +132,10 @@ namespace PakReader.Parsers
             {
                 return new FName(NameMap[NameIndex], NameIndex, Number);
             }
-            throw new FileLoadException($"Bad Name Index {NameIndex} - {Loader.BaseStream.Position}");
+#if DEBUG
+            System.Diagnostics.Debug.WriteLine($"Bad Name Index: {NameIndex}/{NameMap.Length} - Loader Position: {Loader.BaseStream.Position}");
+#endif
+            return default;
         }
 
 

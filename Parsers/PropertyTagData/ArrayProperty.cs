@@ -1,4 +1,3 @@
-﻿using System;
 using PakReader.Parsers.Objects;
 
 namespace PakReader.Parsers.PropertyTagData
@@ -7,6 +6,8 @@ namespace PakReader.Parsers.PropertyTagData
     {
         internal ArrayProperty(PackageReader reader, FPropertyTag tag)
         {
+            Position = reader.Position;
+
             int length = reader.ReadInt32();
             Value = new BaseProperty[length];
 
@@ -19,8 +20,44 @@ namespace PakReader.Parsers.PropertyTagData
             }
             for (int i = 0; i < length; i++)
             {
-                Value[i] = ReadProperty(reader, InnerTag, tag.InnerType, ReadType.ARRAY);
+                Value[i] = ReadAsObject(reader, InnerTag, tag.InnerType, ReadType.ARRAY);
             }
+        }
+
+        public object[] GetValue()
+        {
+            var ret = new object[Value.Length];
+            for (int i = 0; i < ret.Length; i++)
+            {
+                ret[i] = Value[i] switch
+                {
+                    ByteProperty byteProperty => byteProperty.GetValue(),
+                    BoolProperty boolProperty => boolProperty.GetValue(),
+                    IntProperty intProperty => intProperty.GetValue(),
+                    FloatProperty floatProperty => floatProperty.GetValue(),
+                    ObjectProperty objectProperty => objectProperty.GetValue(),
+                    NameProperty nameProperty => nameProperty.GetValue(),
+                    DelegateProperty delegateProperty => delegateProperty.GetValue(),
+                    DoubleProperty doubleProperty => doubleProperty.GetValue(),
+                    ArrayProperty arrayProperty => arrayProperty.GetValue(),
+                    StructProperty structProperty => structProperty.GetValue(),
+                    StrProperty strProperty => strProperty.GetValue(),
+                    TextProperty textProperty => textProperty.GetValue(),
+                    InterfaceProperty interfaceProperty => interfaceProperty.GetValue(),
+                    SoftObjectProperty softObjectProperty => softObjectProperty.GetValue(),
+                    UInt64Property uInt64Property => uInt64Property.GetValue(),
+                    UInt32Property uInt32Property => uInt32Property.GetValue(),
+                    UInt16Property uInt16Property => uInt16Property.GetValue(),
+                    Int64Property int64Property => int64Property.GetValue(),
+                    Int16Property int16Property => int16Property.GetValue(),
+                    Int8Property int8Property => int8Property.GetValue(),
+                    MapProperty mapProperty => mapProperty.GetValue(),
+                    SetProperty setProperty => setProperty.GetValue(),
+                    EnumProperty enumProperty => enumProperty.GetValue(),
+                    _ => Value[i],
+                };
+            }
+            return ret;
         }
     }
 }

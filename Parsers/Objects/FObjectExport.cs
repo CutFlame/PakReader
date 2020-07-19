@@ -1,4 +1,6 @@
-﻿namespace PakReader.Parsers.Objects
+﻿using Newtonsoft.Json;
+
+namespace PakReader.Parsers.Objects
 {
     public sealed class FObjectExport : FObjectResource
     {
@@ -13,20 +15,32 @@
         //public long ScriptSerializationEndOffset { get; }
         //public UObject Object { get; }
         //public int HashNext { get; }
+        [JsonIgnore]
         public bool bForcedExport { get; }
+        [JsonIgnore]
         public bool bNotForClient { get; }
+        [JsonIgnore]
         public bool bNotForServer { get; }
+        [JsonIgnore]
         public bool bNotAlwaysLoadedForEditorGame { get; }
+        [JsonIgnore]
         public bool bIsAsset { get; }
         //public bool bExportLoadFailed { get; }
         //public EDynamicType DynamicType { get; }
         //public bool bWasFiltered { get; }
+        [JsonIgnore]
         public FGuid PackageGuid { get; }
+        [JsonIgnore]
         public uint PackageFlags { get; }
+        [JsonIgnore]
         public int FirstExportDependency { get; }
+        [JsonIgnore]
         public int SerializationBeforeSerializationDependencies { get; }
+        [JsonIgnore]
         public int CreateBeforeSerializationDependencies { get; }
+        [JsonIgnore]
         public int SerializationBeforeCreateDependencies { get; }
+        [JsonIgnore]
         public int CreateBeforeCreateDependencies { get; }
 
         internal FObjectExport(PackageReader reader)

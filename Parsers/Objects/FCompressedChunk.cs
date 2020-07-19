@@ -2,7 +2,7 @@
 
 namespace PakReader.Parsers.Objects
 {
-    public readonly struct FCompressedChunk
+    public readonly struct FCompressedChunk : IUStruct
     {
         public readonly int UncompressedOffset;
         public readonly int UncompressedSize;

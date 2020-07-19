@@ -3,6 +3,7 @@
     readonly struct FPropertyTag
     {
         public readonly int ArrayIndex;
+        public readonly long Position;
         public readonly byte BoolVal;
         public readonly FName EnumName;
         public readonly byte HasPropertyGuid;
@@ -20,6 +21,7 @@
         internal FPropertyTag(PackageReader reader)
         {
             ArrayIndex = 0;
+            Position = 0; // default
             BoolVal = 0;
             EnumName = default;
             HasPropertyGuid = 0;
@@ -41,6 +43,7 @@
             Size = reader.ReadInt32();
             ArrayIndex = reader.ReadInt32();
 
+            Position = reader.Position; // actual
             if (Type.Number == 0)
             {
                 switch (Type.String)

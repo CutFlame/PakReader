@@ -40,7 +40,10 @@ namespace PakReader
             }
             else
             {
-                return Encoding.UTF8.GetString(reader.ReadBytes(SaveNum).AsSpan(..^1));
+                //Range range = ..^1;
+                //int offset = range.Start.Value;
+                //int length = range.End.Value - offset;
+                return Encoding.UTF8.GetString(reader.ReadBytes(SaveNum).AsSpan(0, SaveNum - 1).ToArray());
             }
         }
 

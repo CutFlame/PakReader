@@ -9,7 +9,7 @@ namespace PakReader.Parsers.Objects
         public readonly int SizeZ;
         public readonly FByteBulkData BulkData;
 
-        internal FTexture2DMipMap(BinaryReader reader, Stream ubulk, int bulkOffset)
+        internal FTexture2DMipMap(BinaryReader reader, Stream ubulk, long bulkOffset)
         {
             var bCooked = reader.ReadInt32() != 0;
             BulkData = new FByteBulkData(reader, ubulk, bulkOffset);

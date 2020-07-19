@@ -45,17 +45,15 @@ namespace PakReader
                     throw new NotImplementedException($"Cannot decode {format} format");
             }
 
-            using (var bitmap = new SKBitmap(new SKImageInfo(width, height, colorType, SKAlphaType.Unpremul)))
+            using var bitmap = new SKBitmap(new SKImageInfo(width, height, colorType, SKAlphaType.Unpremul));
+            unsafe
             {
-                unsafe
+                fixed (byte* p = data)
                 {
-                    fixed (byte* p = data)
-                    {
-                        bitmap.SetPixels(new IntPtr(p));
-                    }
+                    bitmap.SetPixels(new IntPtr(p));
                 }
-                return SKImage.FromBitmap(bitmap);
             }
+            return SKImage.FromBitmap(bitmap);
         }
 
         static class BCDecoder

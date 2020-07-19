@@ -9,7 +9,7 @@ namespace PakReader
     {
         static readonly FGuid Magic = new FGuid(0x7574140E, 0xFC034A67, 0x9D90154A, 0x1B7F37C3);
 
-        readonly Dictionary<string, Dictionary<string, string>> Entries = new Dictionary<string, Dictionary<string, string>>();
+        public readonly Dictionary<string, Dictionary<string, string>> Entries = new Dictionary<string, Dictionary<string, string>>();
 
         public LocResReader(string path) : this(File.OpenRead(path)) { }
 
@@ -87,13 +87,10 @@ namespace PakReader
                 {
                     reader.ReadUInt32(); // StrHash
                 }
-                var Namespace = reader.ReadFString();
+                string Namespace = reader.ReadFString();
 
-                var Entries = new Dictionary<string, string>();
-
-                // Read key count
                 uint KeyCount = reader.ReadUInt32();
-
+                Dictionary<string, string> Entries = new Dictionary<string, string>((int)KeyCount);
                 for (uint j = 0; j < KeyCount; j++)
                 {
                     // Read key
@@ -101,7 +98,7 @@ namespace PakReader
                     {
                         reader.ReadUInt32(); // StrHash
                     }
-                    var Key = reader.ReadFString();
+                    string Key = reader.ReadFString();
 
                     reader.ReadUInt32(); // SourceStringHash
 
@@ -139,7 +136,7 @@ namespace PakReader
                     }
                     Entries.Add(Key, EntryLocalizedString);
                 }
-                this.Entries.Add(Namespace, Entries);
+                this.Entries.Add(Namespace ?? "", Entries);
             }
         }
 

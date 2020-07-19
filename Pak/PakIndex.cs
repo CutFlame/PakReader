@@ -21,7 +21,7 @@ namespace PakReader.Pak
             CaseSensitive = caseSensitive;
             Filter = filter;
             if (CacheFiles)
-                CachedFiles = new Dictionary<string, ArraySegment<byte>>();
+                CachedFiles = new Dictionary<string, ArraySegment<byte>?>();
         }
 
         public PakIndex(string path, bool cacheFiles, bool caseSensitive = true) : this(path, cacheFiles, caseSensitive, null) { }
@@ -36,7 +36,7 @@ namespace PakReader.Pak
             CaseSensitive = caseSensitive;
             Filter = filter;
             if (CacheFiles)
-                CachedFiles = new Dictionary<string, ArraySegment<byte>>();
+                CachedFiles = new Dictionary<string, ArraySegment<byte>?>();
             foreach (var file in files)
             {
                 PakFiles.Add(new PakFileReader(file, caseSensitive));
@@ -51,10 +51,10 @@ namespace PakReader.Pak
             CaseSensitive = caseSensitive;
             Filter = filter;
             if (CacheFiles)
-                CachedFiles = new Dictionary<string, ArraySegment<byte>>();
+                CachedFiles = new Dictionary<string, ArraySegment<byte>?>();
             foreach (var stream in streams)
             {
-                PakFiles.Add(new PakFileReader(stream, caseSensitive));
+                PakFiles.Add(new PakFileReader(string.Empty, stream, caseSensitive));
             }
         }
 
@@ -67,7 +67,7 @@ namespace PakReader.Pak
         }
         public void AddPak(Stream stream, byte[] key = null)
         {
-            var reader = new PakFileReader(stream, CaseSensitive);
+            var reader = new PakFileReader(string.Empty, stream, CaseSensitive);
             if (key != null)
                 reader.ReadIndex(key, Filter);
             PakFiles.Add(reader);
@@ -109,13 +109,27 @@ namespace PakReader.Pak
             return n;
         }
 
-        readonly Dictionary<string, ArraySegment<byte>> CachedFiles;
-        public ArraySegment<byte> GetFile(string path)
+        public int UseKey(FGuid EncryptionGuid, string key)
+        {
+            int n = 0;
+            foreach (var pak in PakFiles)
+            {
+                if (!pak.Initialized && EncryptionGuid == pak.Info.EncryptionKeyGuid)
+                {
+                    if (pak.TryReadIndex(key.ToBytesKey(), Filter))
+                        n++;
+                }
+            }
+            return n;
+        }
+
+        readonly Dictionary<string, ArraySegment<byte>?> CachedFiles;
+        public ArraySegment<byte>? GetFile(string path)
         {
             TryGetFile(path, out var ret);
             return ret;
         }
-        public bool TryGetFile(string path, out ArraySegment<byte> ret)
+        public bool TryGetFile(string path, out ArraySegment<byte>? ret)
         {
             if (!CaseSensitive)
                 path = path.ToLowerInvariant();
@@ -126,7 +140,8 @@ namespace PakReader.Pak
                 if (!pak.Initialized) continue;
                 if (path.IndexOf(pak.MountPoint, 0) == 0) // same as StartsWith but more performant
                 {
-                    if (pak.TryGetFile(path.Substring(pak.MountPoint.Length), out ret))
+                    if (pak.TryGetFile(path, out ret, out _, out _))
+                    //if (pak.TryGetFile(path.Substring(pak.MountPoint.Length), out ret, out _, out _))
                     {
                         if (CacheFiles)
                             CachedFiles[path] = ret;
@@ -150,13 +165,21 @@ namespace PakReader.Pak
                 Packages = new Dictionary<string, PakPackage>();
             if (!Packages.TryGetValue(path, out package))
             {
-                var uasset = GetFile(path + ".uasset");
-                var uexp = GetFile(path + ".uexp");
-                var ubulk = GetFile(path + ".ubulk");
-                if (uasset == null || uexp == null) return false; // Can't have a package without uassets or uexps
-                Packages[path] = package = new PakPackage(uasset, uexp, ubulk);
+                foreach (var pak in PakFiles)
+                {
+                    if (!pak.Initialized) continue;
+                    if (path.IndexOf(pak.MountPoint, 0) == 0) // same as StartsWith but more performant
+                    {
+                        if (pak.TryGetFile(path, out var uasset, out var uexp, out var ubulk))
+                        {
+                            if (uasset == null || uexp == null) return false; // Can't have a package without uassets or uexps
+                            Packages[path] = package = new PakPackage(uasset!.Value, uexp!.Value, ubulk);
+                            return true;
+                        }
+                    }
+                }
             }
-            return true;
+            return false;
         }
 
         public IEnumerator<string> GetEnumerator()

@@ -2,7 +2,7 @@
 
 namespace PakReader.Parsers.Objects
 {
-    public readonly struct FCustomVersionContainer
+    public readonly struct FCustomVersionContainer : IUStruct
     {
         public readonly FCustomVersion[] Versions; // actually FCustomVersionArray, but typedeffed to TArray<FCustomVersion>
 

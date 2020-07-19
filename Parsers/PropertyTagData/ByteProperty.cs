@@ -1,12 +1,12 @@
 ﻿using System;
-using PakReader.Parsers.Objects;
 
 namespace PakReader.Parsers.PropertyTagData
 {
     public sealed class ByteProperty : BaseProperty<byte>
     {
-        internal ByteProperty(PackageReader reader, FPropertyTag tag, ReadType readType)
+        internal ByteProperty(PackageReader reader, ReadType readType)
         {
+            Position = reader.Position;
             Value = readType switch
             {
                 ReadType.NORMAL => (byte)reader.ReadFName().Index,
@@ -15,5 +15,7 @@ namespace PakReader.Parsers.PropertyTagData
                 _ => throw new ArgumentOutOfRangeException(nameof(readType)),
             };
         }
+
+        public byte GetValue() => Value;
     }
 }

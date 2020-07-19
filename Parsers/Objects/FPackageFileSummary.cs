@@ -8,8 +8,8 @@ namespace PakReader.Parsers.Objects
         const int PACKAGE_FILE_TAG = unchecked((int)0x9E2A83C1);
         const int PACKAGE_FILE_TAG_SWAPPED = unchecked((int)0xC1832A9E);
 
-        private readonly int FileVersionUE4;
-        private readonly int FileVersionLicenseeUE4;
+        private readonly EUnrealEngineObjectUE4Version FileVersionUE4;
+        private readonly EUnrealEngineObjectLicenseeUE4Version FileVersionLicenseeUE4;
         private readonly FCustomVersionContainer CustomVersionContainer;
 
         public readonly int TotalHeaderSize;
@@ -91,8 +91,8 @@ namespace PakReader.Parsers.Objects
                 {
                     reader.BaseStream.Position += 4; // LegacyUE3Version (int32)
                 }
-                FileVersionUE4 = reader.ReadInt32();
-                FileVersionLicenseeUE4 = reader.ReadInt32();
+                FileVersionUE4 = (EUnrealEngineObjectUE4Version)reader.ReadInt32();
+                FileVersionLicenseeUE4 = (EUnrealEngineObjectLicenseeUE4Version)reader.ReadInt32();
 
                 if (LegacyFileVersion <= -2)
                 {

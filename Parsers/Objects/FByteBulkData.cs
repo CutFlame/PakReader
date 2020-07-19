@@ -2,7 +2,7 @@
 
 namespace PakReader.Parsers.Objects
 {
-    public readonly struct FByteBulkData
+    public readonly struct FByteBulkData : IUStruct
     {
         // Memory saving, we don't need this
         //uint BulkDataFlags;
@@ -12,27 +12,29 @@ namespace PakReader.Parsers.Objects
 
         public readonly byte[] Data;
 
-        internal FByteBulkData(BinaryReader reader, Stream ubulk, int bulkOffset)
+        internal FByteBulkData(BinaryReader reader, Stream ubulk, long ubulkOffset)
         {
             var BulkDataFlags = reader.ReadUInt32();
 
-            bool LongBits = (BulkDataFlags & (uint)EBulkDataFlags.BULKDATA_Size64Bit) != 0;
-
-            var ElementCount = LongBits ? reader.ReadInt64() : reader.ReadInt32();
-            var BulkDataSizeOnDisk = LongBits ? reader.ReadInt64() : reader.ReadInt32();
+            var ElementCount = reader.ReadInt32();
+            _ = reader.ReadInt32(); //BulkDataSizeOnDisk
             var BulkDataOffsetInFile = reader.ReadInt64();
 
             Data = null;
-            if ((BulkDataFlags & (uint)EBulkDataFlags.BULKDATA_ForceInlinePayload) != 0)
+            if ((BulkDataFlags & (uint)EBulkDataFlags.BULKDATA_ForceInlinePayload) != 0 && ElementCount > 0)
             {
                 Data = reader.ReadBytes((int)ElementCount);
             }
             
             if ((BulkDataFlags & (uint)EBulkDataFlags.BULKDATA_PayloadInSeperateFile) != 0)
             {
-                ubulk.Position = BulkDataOffsetInFile + bulkOffset;
-                Data = new byte[ElementCount];
-                ubulk.Read(Data, 0, (int)ElementCount);
+                if (ubulk != null)
+                {
+                    ubulk.Position = BulkDataOffsetInFile + ubulkOffset;
+                    Data = new byte[ElementCount];
+                    ubulk.Read(Data, 0, (int)ElementCount);
+                }
+                //else throw new FileLoadException("No ubulk specified for texture");
             }
         }
     }

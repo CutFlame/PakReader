@@ -8,6 +8,9 @@ namespace PakReader.Parsers.Objects
         public readonly byte G;
         public readonly byte B;
         public readonly byte A;
+        public readonly string Hex => A == 0 || A == 255 ?
+            BinaryHelper.ToHex(R, G, B) :
+            BinaryHelper.ToHex(A, R, G, B);
 
         internal FColor(BinaryReader reader)
         {

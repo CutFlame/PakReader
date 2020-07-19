@@ -1,14 +1,19 @@
-﻿using System;
-using PakReader.Parsers.Objects;
+﻿using PakReader.Parsers.Objects;
+using System.Collections.Generic;
 
 namespace PakReader.Parsers.PropertyTagData
 {
     public sealed class DelegateProperty : BaseProperty
     {
-        internal DelegateProperty(PackageReader reader, FPropertyTag tag)
+        public int Object;
+        public FName Name;
+
+        internal DelegateProperty(PackageReader reader)
         {
-            // Let me know if you find a package that has a DelegateProperty
-            throw new NotImplementedException("Parsing of DelegateProperty types aren't supported yet.");
+            Object = reader.ReadInt32();
+            Name = reader.ReadFName();
         }
+
+        public Dictionary<string, object> GetValue() => new Dictionary<string, object> { ["Object"] = Object, ["Name"] = Name.String };
     }
 }

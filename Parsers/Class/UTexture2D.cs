@@ -3,14 +3,15 @@ using System.IO;
 using PakReader.Parsers.Objects;
 using SkiaSharp;
 
-namespace PakReader.Parsers
+namespace PakReader.Parsers.Class
 {
-    public sealed class Texture2D : UObject
+    public sealed class UTexture2D : UObject
     {
         public FTexturePlatformData[] PlatformDatas { get; }
 
         SKImage image;
-        public SKImage Image {
+        public SKImage Image
+        {
             get
             {
                 if (image == null)
@@ -22,7 +23,7 @@ namespace PakReader.Parsers
             }
         }
 
-        internal Texture2D(PackageReader reader, Stream ubulk, int bulkOffset) : base(reader)
+        internal UTexture2D(PackageReader reader, Stream ubulk, long bulkOffset) : base(reader)
         {
             new FStripDataFlags(reader); // and I quote, "still no idea"
             new FStripDataFlags(reader); // "why there are two" :)
@@ -31,11 +32,20 @@ namespace PakReader.Parsers
             {
                 var data = new List<FTexturePlatformData>(1); // Probably gonna be only one texture anyway
                 var PixelFormatName = reader.ReadFName();
-                while (!PixelFormatName.IsNone)
+                if (FModel.Globals.Game.Version < EPakVersion.INDEX_ENCRYPTION)
                 {
-                    long SkipOffset = reader.ReadInt64();
+                    _ = reader.ReadInt32(); // SkipOffset
                     data.Add(new FTexturePlatformData(reader, ubulk, bulkOffset));
-                    PixelFormatName = reader.ReadFName();
+                    reader.ReadFName();
+                }
+                else
+                {
+                    while (!PixelFormatName.IsNone)
+                    {
+                        _ = reader.ReadInt64(); // SkipOffset
+                        data.Add(new FTexturePlatformData(reader, ubulk, bulkOffset));
+                        PixelFormatName = reader.ReadFName();
+                    }
                 }
                 PlatformDatas = data.ToArray();
             }

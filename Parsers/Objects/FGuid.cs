@@ -21,7 +21,7 @@ namespace PakReader.Parsers.Objects
         private static readonly FGuid zero = new FGuid(0, 0, 0, 0);
         public static ref readonly FGuid Zero => ref zero;
 
-        public FGuid(uint a, uint b, uint c, uint d)
+        internal FGuid(uint a, uint b, uint c, uint d)
         {
             A = a;
             B = b;
@@ -29,7 +29,7 @@ namespace PakReader.Parsers.Objects
             D = d;
         }
 
-        public FGuid(string guid)
+        internal FGuid(string guid)
         {
             A = uint.Parse(guid[0 .. 8], NumberStyles.HexNumber);
             B = uint.Parse(guid[8 ..16], NumberStyles.HexNumber);
@@ -58,7 +58,6 @@ namespace PakReader.Parsers.Objects
         public static bool operator !=(FGuid left, FGuid right) => !left.Equals(right);
 
         // TODO: maybe make this more performant?
-        public override string ToString() =>
-            A.ToString("x8") + B.ToString("x8") + C.ToString("x8") + D.ToString("x8");
+        public override string ToString() => $"{A}-{B}-{C}-{D}";
     }
 }

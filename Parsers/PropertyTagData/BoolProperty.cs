@@ -7,13 +7,22 @@ namespace PakReader.Parsers.PropertyTagData
     {
         internal BoolProperty(PackageReader reader, FPropertyTag tag, ReadType readType)
         {
-            Value = readType switch
+            switch (readType)
             {
-                ReadType.NORMAL => tag.BoolVal != 0,
-                ReadType.MAP => reader.ReadByte() != 0,
-                ReadType.ARRAY => reader.ReadByte() != 0,
-                _ => throw new ArgumentOutOfRangeException(nameof(readType)),
-            };
+                case ReadType.NORMAL:
+                    Position = tag.Position;
+                    Value = tag.BoolVal != 0;
+                    break;
+                case ReadType.MAP:
+                case ReadType.ARRAY:
+                    Position = reader.Position;
+                    Value = reader.ReadByte() != 0;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(readType));
+            }
         }
+
+        public bool GetValue() => Value;
     }
 }
