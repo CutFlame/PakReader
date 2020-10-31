@@ -201,6 +201,7 @@ namespace PakReader.Pak
             }
 
             Reader.Dispose();
+            AesKey = key;
             Initialized = true;
             exc = null;
         }
@@ -442,18 +443,9 @@ namespace PakReader.Pak
             if (!string.IsNullOrEmpty(path) && Entries.TryGetValue(CaseSensitive ? path : path.ToLowerInvariant(), out var entry))
             {
                 uasset = entry.GetData(Stream, AesKey, Info.CompressionMethods);
-                if (entry.HasUexp())
-                {
-                    uexp = entry.Uexp.GetData(Stream, AesKey, Info.CompressionMethods);
-                    ubulk = entry.HasUbulk() ? entry.Ubulk.GetData(Stream, AesKey, Info.CompressionMethods) : null;
-                    return true;
-                }
-                else // return a fail but keep the uasset data
-                {
-                    uexp = null;
-                    ubulk = null;
-                    return false;
-                }
+                uexp = entry.HasUexp() ? entry.Uexp.GetData(Stream, AesKey, Info.CompressionMethods) : null;
+                ubulk = entry.HasUbulk() ? entry.Ubulk.GetData(Stream, AesKey, Info.CompressionMethods) : null;
+                return true;
             }
             uasset = null;
             uexp = null;
