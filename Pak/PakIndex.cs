@@ -12,6 +12,7 @@ namespace PakReader.Pak
         public bool CaseSensitive { get; }
         public PakFilter Filter { get; }
         readonly List<PakFileReader> PakFiles = new List<PakFileReader>();
+        public int PakFileCount { get { return PakFiles.Count; } }
 
         public PakIndex(bool cacheFiles, bool caseSensitive = true) : this(cacheFiles, caseSensitive, null) { }
         public PakIndex(bool cacheFiles, bool caseSensitive = true, IEnumerable<string> filter = null) : this(cacheFiles, caseSensitive, new PakFilter(filter, caseSensitive)) { }
@@ -154,6 +155,8 @@ namespace PakReader.Pak
         }
 
         Dictionary<string, PakPackage> Packages;
+        public int PackageCount { get { return Packages.Count; } }
+
         public PakPackage GetPackage(string path)
         {
             TryGetPackage(path, out var ret);
